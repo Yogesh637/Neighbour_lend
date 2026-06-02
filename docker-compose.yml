@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: neighbour-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: springboot_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pYogesh@123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: neighbour-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: neighbour-backend
+    restart: always
+    ports:
+      - "8152:8152"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/springboot_db?createDatabaseIfNotExist=true
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_MAIL_USERNAME: ""
+      SPRING_MAIL_PASSWORD: ""
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8152/items"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+    container_name: neighbour-frontend
+    restart: always
+    depends_on:
+      - backend
+
+  nginx-proxy:
+    image: nginx:1.25-alpine
+    container_name: neighbour-nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  mysql_data:

@@ -1,30 +1,30 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import Dashboard from './pages/Dashboard/Dashboard';
-import MyBookings from './pages/Bookings/MyBookings';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './store/authStore';
+import { ChatProvider } from './context/ChatContext';
+import AppRoutes from './routes/AppRoutes';
 import './index.css';
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
-  return children;
-};
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ChatProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </ChatProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

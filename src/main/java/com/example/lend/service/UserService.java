@@ -6,4 +6,6 @@ public interface UserService {
 	User register(User user);
 
 	User getUserByUsername(String username);
+
+	void sendOtpEmail(User user);
 }

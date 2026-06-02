@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "items", indexes = {
+    @Index(name = "idx_item_name", columnList = "name"),
+    @Index(name = "idx_item_category", columnList = "category"),
+    @Index(name = "idx_item_owner", columnList = "user_id"),
+    @Index(name = "idx_item_available", columnList = "available")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -11,9 +17,16 @@ public class Item {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
+	@Column(nullable = false)
 	private String name;
+
+	@Column(columnDefinition = "TEXT")
 	private String description;
+
+	@Column(nullable = false)
 	private Double price;
+
 	private String imageUrl;
 	private String imageType;
 
@@ -22,14 +35,21 @@ public class Item {
 	@Column(columnDefinition = "LONGBLOB")
 	private byte[] imageData;
 
+	@Column(nullable = false, length = 50)
 	private String category;
 
 	@Column(nullable = false)
 	private boolean available = true;
 
-	@ManyToOne
-	@JoinColumn(name = "user_id")
-	private User owner; // Link item to an owner
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_item_owner"))
+	private User owner;
+
+	private Double weeklyRate;
+	private Double securityDeposit;
+	private String city;
+	private String state;
+	private String ownerName;
 
 	@Transient
 	private java.time.LocalDateTime nextAvailableDate;
@@ -125,5 +145,45 @@ public class Item {
 	@com.fasterxml.jackson.annotation.JsonProperty("hasImage")
 	public boolean hasImage() {
 		return imageData != null && imageData.length > 0;
+	}
+
+	public Double getWeeklyRate() {
+		return weeklyRate;
+	}
+
+	public void setWeeklyRate(Double weeklyRate) {
+		this.weeklyRate = weeklyRate;
+	}
+
+	public Double getSecurityDeposit() {
+		return securityDeposit;
+	}
+
+	public void setSecurityDeposit(Double securityDeposit) {
+		this.securityDeposit = securityDeposit;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getOwnerName() {
+		return ownerName;
+	}
+
+	public void setOwnerName(String ownerName) {
+		this.ownerName = ownerName;
 	}
 }

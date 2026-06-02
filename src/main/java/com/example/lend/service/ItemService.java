@@ -1,19 +1,22 @@
 package com.example.lend.service;
 
 import com.example.lend.entity.Item;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface ItemService {
-	Item add(Item item);
+    Item add(Item item);
 
-	List<Item> getAllItems();
+    List<Item> getAllItems();
 
-	Item getItemById(Long id);
+    Page<Item> getPagedItems(int page, int size, String category, String search);
 
-	Item updateItem(Long id, Item item);
+    Item getItemById(Long id);
 
-	void deleteItem(Long id);
+    Item updateItem(Long id, Item item);
 
-	void deleteAllItems();
+    void deleteItem(Long id);
+
+    void deleteAllItems();
 }
